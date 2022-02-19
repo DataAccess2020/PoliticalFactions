@@ -1,1 +1,2 @@
 library(SPARQL)
+library(tidyverse)
