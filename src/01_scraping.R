@@ -24,6 +24,9 @@ df_bio <- df_bio$results
 #extraction of parliamentary purposed law
 law <- "SELECT ?atto ?num ?primo_nome ?primo_cognome ?altro_nome ?altro_cognome
 WHERE {
+ {
+  SELECT ?atto ?num ?primo_nome ?primo_cognome ?altro_nome ?altro_cognome
+  WHERE {
   ?atto a ocd:atto;
           dc:identifier ?num;
           ocd:rif_leg <http://dati.camera.it/ocd/legislatura.rdf/repubblica_18> .
@@ -40,11 +43,14 @@ WHERE {
   
   #filter for testing purposes
   #FILTER( ?atto = <http://dati.camera.it/ocd/attocamera.rdf/ac18_71>).
+    }
+	GROUP BY ?atto
+	ORDER BY ?num
 }
-GROUP BY ?atto
-ORDER BY ?num
+  }
+
 LIMIT 10
-OFFSET 1000"
+OFFSET 30000"
 
 df_law <- SPARQL(endpoint, law)
 df_law <- df_law$results
