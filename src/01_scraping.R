@@ -21,8 +21,12 @@ ORDER BY ?cognome"
 df_bio <- SPARQL(endpoint, bio)
 df_bio <- df_bio$results
 
-#extraction of parliamentary purposed law
-law <- "SELECT ?atto ?num ?primo_nome ?primo_cognome ?altro_nome ?altro_cognome
+#extraction of laws first and others contributors
+
+df_law <- tibble() #empty df 
+
+#the main query makes use of a subquery for offset purposes
+query_main <- "SELECT ?atto ?num ?primo_nome ?primo_cognome ?altro_nome ?altro_cognome
 WHERE {
  {
   SELECT ?atto ?num ?primo_nome ?primo_cognome ?altro_nome ?altro_cognome
@@ -49,11 +53,23 @@ WHERE {
 }
   }
 
-LIMIT 10
-OFFSET 30000"
+LIMIT 5000
+OFFSET"
 
-df_law <- SPARQL(endpoint, law)
-df_law <- df_law$results
+#since the Virtuoso Endpoint have a 10000 results limits it need an offset
+# in order to scrapes all the triples
+query_offset <- c("0","5000","10000","15000","20000","25000","30000")
+
+
+i <- 0
+for (i in 1:length(query_offset)) {
+  law <- str_c(query_main,
+               query_offset[i],
+               sep = " ")
+  #print(query_offset[i])
+  result_law <- SPARQL(endpoint, law)
+  df_law <- rbind(df_law, result_law$results)
+}
 
 
 
