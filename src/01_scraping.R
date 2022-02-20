@@ -58,7 +58,7 @@ OFFSET"
 
 #since the Virtuoso Endpoint have a 10000 results limits it need an offset
 # in order to scrapes all the triples
-query_offset <- c("0","5000","10000","15000","20000","25000","30000")
+query_offset <- c("0","5000","10000","15000","20000","25000","30000","35000")
 
 
 i <- 0
@@ -69,7 +69,8 @@ for (i in 1:length(query_offset)) {
   #print(query_offset[i])
   result_law <- SPARQL(endpoint, law)
   df_law <- rbind(df_law, result_law$results)
+  Sys.sleep(30)
 }
-
-
-
+#Data Updated To 20 of February 2021 10:00 AM UTC+01:00
+saveRDS(object = df_law,
+        file = here::here("data","contributors.rds"))
