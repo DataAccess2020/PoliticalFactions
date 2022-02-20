@@ -20,9 +20,12 @@ ORDER BY ?cognome"
 
 df_bio <- SPARQL(endpoint, bio)
 df_bio <- df_bio$results
+#Data Updated To 20 of February 2021 10:00 AM UTC+01:00
+saveRDS(object = df_bio,
+        file = here::here("data","deputies.rds"))
+
 
 #extraction of laws first and others contributors
-
 df_law <- tibble() #empty df 
 
 #the main query makes use of a subquery for offset purposes
