@@ -29,13 +29,14 @@ saveRDS(object = df_bio,
 df_law <- tibble() #empty df 
 
 #the main query makes use of a subquery for offset purposes
-query_main <- "SELECT ?atto ?num ?primo_nome ?primo_cognome ?altro_nome ?altro_cognome
+query_main <- "SELECT ?atto ?num ?date ?primo_nome ?primo_cognome ?altro_nome ?altro_cognome
 WHERE {
  {
-  SELECT ?atto ?num ?primo_nome ?primo_cognome ?altro_nome ?altro_cognome
+  SELECT ?atto ?num ?date ?primo_nome ?primo_cognome ?altro_nome ?altro_cognome
   WHERE {
   ?atto a ocd:atto;
           dc:identifier ?num;
+          dc:date ?date;
           ocd:rif_leg <http://dati.camera.it/ocd/legislatura.rdf/repubblica_18> .
   
   ?atto ocd:primo_firmatario ?primo .
@@ -72,7 +73,7 @@ for (i in 1:length(query_offset)) {
   #print(query_offset[i])
   result_law <- SPARQL(endpoint, law)
   df_law <- rbind(df_law, result_law$results)
-  Sys.sleep(30)
+  Sys.sleep(5)
 }
 #Data Updated To 20 of February 2021 10:00 AM UTC+01:00
 saveRDS(object = df_law,
