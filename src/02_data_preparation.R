@@ -131,6 +131,27 @@ V(conteI_network)$color <- ifelse(V(conteI_network)$party == "PARTITO DEMOCRATIC
 V(conteI_network)$color <- ifelse(V(conteI_network)$party == "LIBERI E UGUALI ", "magenta", V(conteI_network)$color)
 V(conteI_network)$color <- ifelse(V(conteI_network)$party == "MISTO ", "peachpuff4", V(conteI_network)$color)
 
-# plot network
-plot(conteI_network, vertex.size = 10, vertex.label = NA,vertex.label.cex = .7,edge.arrow.size = .3,edge.width = .7)
+color <- unique(V(conteI_network)$party)
+party_color <-  c("lightblue", "#003366", "red", "yellow", NA, "forestgreen", "peachpuff4", "magenta")
 
+hub_sc <- hub_score(conteI_network, weights=NA)$vector
+aut_sc <- authority_score(conteI_network, weights=NA)$vector
+community <- cluster_edge_betweenness(conteI_network)
+
+l <- layout_with_fr(conteI_network)
+# plot network
+plot(
+     conteI_network, 
+     main = "Conte I",
+     vertex.size = 7, 
+     vertex.label = NA,
+     vertex.label.cex = .7,
+     edge.arrow.size = .1,
+     edge.width = .7,
+     frame = F,
+     layout = l)
+
+#plot(0,type='n',axes=FALSE,ann=FALSE)
+#legend("bottom", legend=color, bty = "n", cex = 0.75, 
+#       pt.cex = 3, pch=20, col = party_color ,
+#       horiz = FALSE,ncol = 1)
