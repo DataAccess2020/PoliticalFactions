@@ -34,9 +34,12 @@ I datasets ricavati sono salvati su supporto `.csv` per ottimizzarne la portabil
 - `deputies.csv`:
   - `name` - Nome e Cognome del deputato
   - `party` - Partito di afferenza del deputato
+  - `date` - Intervallo di afferenza
 
 La variabile `name` è ricavata dal merge tra la proprietà `firstName` e `surname` metadata [FOAF](http://xmlns.com/foaf/spec/) della classe `ocd:deputato` . I deputati verrano codificati secondo un'id univoco.
-La variabile `party` è ricavata dalla label della proprietà . I partiti verrano poi codificati secondo id univoci; i deputati che hanno cambiato il partito durante il corso della legislatura verrano ricodificati in una categoria a parte *da definire*.
+La variabile `party` è ricavata dalla label della proprietà .
+La variabile `date` è ricavata dal partito, che include la data di iscrizione. Alcuni deputati hanno cambiato partito nel corso della legislatura.
+I partiti verrano poi codificati secondo id univoci; i deputati che hanno cambiato il partito durante il corso della legislatura verrano ricodificati in una categoria a parte *da definire*.
 
 - `contributors.csv`:
   - `num` - numero atto
