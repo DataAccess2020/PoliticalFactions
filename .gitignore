@@ -230,3 +230,4 @@ TSWLatexianTemp*
 *.Rproj
 .Rproj.user
 .Rhistory
+Data/.DS_Store
