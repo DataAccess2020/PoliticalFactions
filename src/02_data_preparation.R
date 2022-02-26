@@ -1,10 +1,37 @@
 
-# Deputies data preparation -----------------------------------------------
 
+# Deputies data preparation -----------------------------------------------
 
 # import deputies.csv, skipping the firs column which contains unused data
 deputies <- vroom(here('data/deputies.csv'),
       col_select = c('nome','cognome','partito'))
+
+# merge name and surname
+deputies <- deputies %>% 
+  unite(name, nome, cognome, sep = " ") %>% 
+  separate(col = partito,
+           into = c('party','date'),
+           sep = '\\(')
+
+deputies <- deputies %>% 
+  mutate(date= gsub(")", "", date))
+
+deputies <- deputies %>% 
+  separate(col= date,
+           into = c('s_date','e_date'),
+           sep= '-') %>% 
+  mutate(e_date = ifelse(is.na(e_date), "26.02.2022", e_date))
+   
+
+# parsing party dates
+deputies <- deputies %>% 
+  mutate(s_date = dmy(deputies$s_date),
+         e_date = dmy(deputies$e_date))
+
+# mutate to interval date format
+deputies <- deputies %>% 
+  mutate(date = s_date %--% e_date)
+
 
 # Contributors data preparation ------------------------------------------------
 
