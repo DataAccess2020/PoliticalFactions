@@ -32,6 +32,15 @@ deputies <- deputies %>%
 deputies <- deputies %>% 
   mutate(date = s_date %--% e_date)
 
+# creating unique keys for party
+deputies <- deputies %>% 
+  group_by(party) %>% 
+  mutate(party_id = cur_group_id())
+
+# creating unique keys for deputies
+deputies <- deputies %>% 
+  group_by(name) %>% 
+  mutate(mp_id = cur_group_id())
 
 # Contributors data preparation ------------------------------------------------
 
