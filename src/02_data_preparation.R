@@ -1,5 +1,3 @@
-
-
 # Deputies data preparation -----------------------------------------------
 
 # import deputies.csv, skipping the firs column which contains unused data
@@ -39,20 +37,56 @@ deputies <- deputies %>%
 
 # creating unique keys for deputies
 deputies <- deputies %>% 
-  group_by(name) %>% 
+  group_by(name) %>%
   mutate(mp_id = cur_group_id())
+
+# drop s_date & e_date
+deputies <- deputies %>% 
+  select(!(c(s_date,e_date)))
 
 # Contributors data preparation ------------------------------------------------
 
-# import contributors.csv, skipping the firs column which contains unused data
+# import contributors.csv, skipping the firs column which contains 
+# parsing the date columnunused data
 contributors <- vroom(here("data/contributors.csv"),
                       col_select = c('num':'altro_cognome'))
 
-# parsing the date column
 contributors$date <- ymd(contributors$date)
 
-subset(contributors, contributors$date >= "2018-06-01" & contributors$date < "2019-09-05")
+# names first signatory
+contributors <-  contributors %>% 
+  unite(signatory, primo_nome, primo_cognome, sep = " ")
+  
+# names joint signatory
+contributors <-  contributors %>% 
+  unite(joint_signatory, altro_nome, altro_cognome, sep = " ") 
 
+  
+# first left join into first signatory keys
+contributors <-  left_join(
+    contributors,
+    deputies,
+    by = c("signatory" = "name"),
+    suffix = c("_law", "_mp")
+  )
+# if the mp have changed party subset if date_law not included within the political mandate
+contributors <- subset(contributors, (contributors$date_law %within% contributors$date_mp) == TRUE)
+
+# second left join into joint signatory
+
+contributors <- left_join(
+  contributors,
+  deputies,
+  by = c("joint_signatory" = "name"),
+  suffix = c("_first", "_joint")
+)
+
+# if the mp have changed party subset if date_law not included within the political mandate of joint signatory
+contributors <- subset(contributors, (contributors$date_law %within% contributors$date) == TRUE)
+
+#
+contributors <- contributors %>% 
+  select(!c(date_mp, date))
 
 
 # Conte I in carica dal 1º giugno 2018 al 5 settembre 2019, 
