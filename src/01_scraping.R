@@ -21,8 +21,7 @@ ORDER BY ?cognome"
 df_bio <- SPARQL(endpoint, bio)
 df_bio <- df_bio$results
 #Data Updated To 20 of February 2021 10:00 AM UTC+01:00
-saveRDS(object = df_bio,
-        file = here::here("data","deputies.rds"))
+write.csv(df_bio, here::here("data/deputies.csv"))
 
 
 #extraction of laws first and others contributors
@@ -76,5 +75,5 @@ for (i in 1:length(query_offset)) {
   Sys.sleep(5)
 }
 #Data Updated To 20 of February 2021 10:00 AM UTC+01:00
-saveRDS(object = df_law,
-        file = here::here("data","contributors.rds"))
+write.csv(dl_law, here::here("data/contributors.csv"))
+

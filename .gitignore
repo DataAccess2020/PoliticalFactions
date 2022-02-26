@@ -232,5 +232,5 @@ data/*
 .Rhistory
 
 ## Exceptions to parliament data
-!data/contributors.rds
-!data/deputies.rds
+!data/contributors.csv
+!data/deputies.csv
