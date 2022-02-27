@@ -1,4 +1,3 @@
-
 endpoint <- "http://dati.camera.it/sparql"
 
 #biographies of all Deputati
