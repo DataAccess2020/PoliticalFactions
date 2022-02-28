@@ -2,78 +2,46 @@
 
 # import deputies.csv, skipping the firs column which contains unused data
 deputies <- vroom(here('data/deputies.csv'),
-      col_select = c('nome','cognome','partito'))
-
-# merge name and surname
-deputies <- deputies %>% 
-  unite(name, nome, cognome, sep = " ") %>% 
-  separate(col = partito,
-           into = c('party','date'),
-           sep = '\\(')
+      col_select = c('name','partito',"s_office","e_office"))
 
 deputies <- deputies %>% 
-  mutate(date= gsub(")", "", date))
+  separate(col= partito,
+           into = c('party','trash'),
+           sep= '\\(') %>% 
+  select(!(trash))
+deputies$party <- str_trim(deputies$party) 
 
-deputies <- deputies %>% 
-  separate(col= date,
-           into = c('s_date','e_date'),
-           sep= '-') %>% 
-  mutate(e_date = ifelse(is.na(e_date), "26.02.2022", e_date))
-   
 
 # parsing party dates
+deputies$e_office <- ifelse(test = is.na(deputies$e_office), yes = 20220228, no = deputies$e_office)
+
 deputies <- deputies %>% 
-  mutate(s_date = dmy(deputies$s_date),
-         e_date = dmy(deputies$e_date))
+  mutate(s_office = ymd(s_office),
+         e_office = ymd(e_office))
+
 
 # mutate to interval date format
 deputies <- deputies %>% 
-  mutate(date = interval(start = s_date, end = e_date))
+  mutate(date = interval(start = s_office, end = e_office)) %>% 
+  select(!c(s_office, e_office))
 
-# creating unique keys for party
-deputies <- deputies %>% 
-  group_by(party) %>% 
-  mutate(party_id = cur_group_id())
-
-# creating unique keys for deputies
-deputies <- deputies %>% 
-  group_by(name) %>%
-  mutate(mp_id = cur_group_id())
-
-# drop s_date & e_date
-deputies <- deputies %>% 
-  select(!(c(s_date,e_date)))
-
-# Contributors data preparation ------------------------------------------------
+# Conte I data preparation ------------------------------------------------
 
 # import contributors.csv, skipping the firs column which contains 
-# parsing the date columnunused data
-contributors <- vroom(here("data/contributors.csv"),
-                      col_select = c('num':'altro_cognome'))
+conteI <- vroom(here("data/conteI.csv"),
+                      col_select = c('num':'joint_signatory'))
 
-contributors$date <- ymd(contributors$date)
 
-# names first signatory
-contributors <-  contributors %>% 
-  unite(signatory, primo_nome, primo_cognome, sep = " ")
-  
-# names joint signatory
-contributors <-  contributors %>% 
-  unite(joint_signatory, altro_nome, altro_cognome, sep = " ") 
+# Parsing date
+conteI$date <- ymd(conteI$date)
 
   
 # first left join into first signatory keys
-contributors <-  left_join(
-    contributors,
-    deputies,
-    by = c("signatory" = "name"),
-    suffix = c("_law", "_mp")
-  )
 # if the mp have changed party subset if date_law not included within the political mandate
-contributors <- subset(contributors, (contributors$date_law %within% contributors$date_mp) == TRUE)
+contributors <- subset(deputies, !(deputies$date < "2019-09-05"))
 
 # second left join into joint signatory
-
+contributors <- subset(deputies, int_end(deputies$date) < "2019-09-05")
 contributors <- left_join(
   contributors,
   deputies,
