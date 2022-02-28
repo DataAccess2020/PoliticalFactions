@@ -31,27 +31,33 @@ deputies <- deputies %>%
 conteI <- vroom(here("data/conteI.csv"),
                       col_select = c('num':'joint_signatory'))
 
+# Conte I date interval
+conteI_date <- interval(ydm("2018-31-05"), ydm("2019-04-09"))
 
 # Parsing date
 conteI$date <- ymd(conteI$date)
 
-  
-# first left join into first signatory keys
-# if the mp have changed party subset if date_law not included within the political mandate
-contributors <- subset(deputies, !(deputies$date < "2019-09-05"))
 
-# second left join into joint signatory
-contributors <- subset(deputies, int_end(deputies$date) < "2019-09-05")
-contributors <- left_join(
-  contributors,
+# deputies decayed or switcher
+decayed <- subset(deputies, int_end(deputies$date) < int_end(conteI_date))
+
+decayed <- left_join(
+  decayed,
   deputies,
-  by = c("joint_signatory" = "name"),
-  suffix = c("_first", "_joint")
+  by = c("name" = "name"),
+  suffix = c("_fist", "_second")
 )
+decayed <- decayed %>% 
+  group_by(name) %>% 
+  summarize(n = n()) %>% 
+  mutate(party = ifelse(n > 1, "SWITCHER", "DECAYED")) %>% 
+  select(!(n))
 
-# if the mp have changed party subset if date_law not included within the political mandate of joint signatory
-contributors <- subset(contributors, (contributors$date_law %within% contributors$date) == TRUE)
+# Conte I deputies contributors
 
-# filter unsued columns
-contributors <- contributors %>% 
-  select(!c(date_mp, date))
+
+#deputies_conteI
+
+conteI_dep <- unique(conteI$signatory)
+conteI_dep <- append(conteI_dep, unique(conteI$joint_signatory))
+conteI_dep <- tibble(name = unique(conteI_dep))

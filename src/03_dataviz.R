@@ -13,11 +13,6 @@ conteI_edges <- contributors %>%
 deputies_conteI <- deputies %>% 
   filter(interval(start = "2018-06-01", end = "2019-09-05")  %within% date)
 
-#deputies_conteI
-
-conteI_nodes <- unique(conteI_edges$signatory)
-conteI_nodes <- append(conteI_nodes, unique(conteI_edges$joint_signatory))
-conteI_nodes <- tibble(name = unique(conteI_nodes))
 
 conteI_nodes <- left_join(conteI_nodes,
           subset(deputies, interval(start = "2018-06-01", end = "2019-09-05") %within% deputies$date),
