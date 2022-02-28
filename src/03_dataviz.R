@@ -13,7 +13,7 @@ conteI_edges <- contributors %>%
 deputies_conteI <- deputies %>% 
   filter(interval(start = "2018-06-01", end = "2019-09-05")  %within% date)
 
-deputies_conteI
+#deputies_conteI
 
 conteI_nodes <- unique(conteI_edges$signatory)
 conteI_nodes <- append(conteI_nodes, unique(conteI_edges$joint_signatory))
@@ -29,7 +29,7 @@ conteI_nodes <- left_join(conteI_nodes,
 # network governo 
 conteI_network <- graph_from_data_frame(conteI_edges, directed = T, vertices = conteI_nodes)
 
-unique(V(conteI_network)$party)
+#unique(V(conteI_network)$party)
 
 # codifica colori partito
 V(conteI_network)$color <- NA
