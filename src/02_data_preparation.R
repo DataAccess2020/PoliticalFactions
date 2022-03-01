@@ -1,6 +1,6 @@
 # Deputies data preparation -----------------------------------------------
 
-# import deputies.csv, skipping the firs column which contains unused data
+# import deputies.csv, skipping the first non-interesting variable
 deputies <- vroom(here('data/deputies.csv'),
       col_select = c('name','partito',"s_office","e_office"))
 
@@ -27,7 +27,7 @@ deputies <- deputies %>%
 
 # Conte I data preparation ------------------------------------------------
 
-# import contributors.csv, skipping the firs column which contains 
+# import contributors.csv, skipping the first non-interesting variable
 conteI <- vroom(here("data/conteI.csv"),
                       col_select = c('num':'joint_signatory'))
 
@@ -38,26 +38,14 @@ conteI_date <- interval(ydm("2018-31-05"), ydm("2019-04-09"))
 conteI$date <- ymd(conteI$date)
 
 
-# deputies decayed or switcher
-decayed <- subset(deputies, int_end(deputies$date) < int_end(conteI_date))
+# Conte I deputies and contributors
 
-decayed <- left_join(
-  decayed,
-  deputies,
-  by = c("name" = "name"),
-  suffix = c("_fist", "_second")
-)
-decayed <- decayed %>% 
-  group_by(name) %>% 
-  summarize(n = n()) %>% 
-  mutate(party = ifelse(n > 1, "SWITCHER", "DECAYED")) %>% 
-  select(!(n))
-
-# Conte I deputies contributors
+conteI_deputies <-  subset(deputies, int_start(deputies$date) < int_end(conteI_date))
+conteI_deputies <- unique(conteI_deputies)
+conteI_deputies <- conteI_deputies %>% 
+  select(!(date))
+ #since all deputies have one entry no further preparations are required
 
 
-#deputies_conteI
 
-conteI_dep <- unique(conteI$signatory)
-conteI_dep <- append(conteI_dep, unique(conteI$joint_signatory))
-conteI_dep <- tibble(name = unique(conteI_dep))
+
