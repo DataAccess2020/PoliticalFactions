@@ -50,13 +50,24 @@ conteI_date <- interval(ydm("2018-31-05"), ydm("2019-04-09"))
 
 conteI$date <- ymd(conteI$date)
 
-# Extracting Conte I deputies and contributors
+# Extracting Conte I deputies and contributors e dealing with duplicate nodes
 
 conteI_deputies <- deputies %>% 
   filter(int_start(date) < int_end(conteI_date))
-conteI_deputies <- unique(conteI_deputies)
+
+duplicate <- conteI_deputies %>% 
+  group_by(name) %>% 
+  summarise(n = n()) %>% 
+  filter(n >1) %>% 
+  add_column(party = "SWITCHER/DECAYED") %>% 
+  select(name, party)
 conteI_deputies <- conteI_deputies %>% 
+  anti_join(duplicate, by = "name") %>% 
   select(!(date))
+conteI_deputies <- rbind(conteI_deputies, duplicate)
+
+#remove orphan nodes 
+conteI_deputies <- conteI_deputies[-(which(conteI_deputies$name %!in% conteI$signatory & conteI_deputies$name %!in% conteI$joint_signatory)),]
 
 # debug deputies list
 
@@ -92,6 +103,22 @@ conteII$date <- ymd(conteII$date)
 conteII_deputies <-  deputies %>% 
   filter(int_start(deputies$date) <= int_start(conteII_date))
 
+# Extracting Conte II deputies and contributors e dealing with duplicate nodes
+duplicate <- conteII_deputies %>% 
+  group_by(name) %>% 
+  summarise(n = n()) %>% 
+  filter(n >1) %>% 
+  add_column(party = "SWITCHER/DECAYED") %>% 
+  select(name, party)
+conteII_deputies <- conteII_deputies %>% 
+  anti_join(duplicate, by = "name") %>% 
+  select(!(date))
+conteII_deputies <- rbind(conteII_deputies, duplicate)
+
+#remove orphan nodes 
+conteII_deputies <- conteII_deputies[-(which(conteII_deputies$name %!in% conteII$signatory & conteII_deputies$name %!in% conteII$joint_signatory)),]
+
+
 # As with Conte I contributors we must control for errors and missing values
 table(unique(conteII$signatory) %in% conteII_deputies$name)
 table(unique(conteII$joint_signatory) %in% conteII_deputies$name)
@@ -103,9 +130,10 @@ debug <- conteII[index,]
 debug <- unique(debug$joint_signatory)
 # the inspection revealed that the missing MPs are those who took the first term 
 # office AFTER the start of Conte II! Since that, we will add them to the nodes df
-conteII_deputies <- rbind(conteII_deputies, deputies[deputies$name %in% debug,])
+conteII_deputies <- rbind(conteII_deputies, deputies[deputies$name %in% debug,1:2])
 
-#drop the variable no more usefull
-conteII_deputies <- conteII_deputies %>% 
-  select(!(date))
+
+# Removing tmp variables --------------------------------------------------
+
+rm(conteI_date, conteII_date, debug, index, deputies, duplicate)
 

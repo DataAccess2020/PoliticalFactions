@@ -6,3 +6,4 @@ library(vroom)
 library(lubridate)
 library(igraph)
 library(stringr)
+`%!in%` <- Negate(`%in%`) # not in function declaration
