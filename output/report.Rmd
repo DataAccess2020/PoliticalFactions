@@ -1,0 +1,21 @@
+---
+title: "Political Factions"
+author: "Nicola Casarin"
+subtitle: Capstone project for Data Access and Regulation course
+date: "3/2/2022"
+output: 
+  pdf_document:
+    keep_tex: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+# Methods
+
+# Results
+
+# Discussion
