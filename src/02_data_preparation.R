@@ -131,8 +131,16 @@ debug <- unique(debug$joint_signatory)
 # office AFTER the start of Conte II! Since that, we will add them to the nodes df
 conteII_deputies <- rbind(conteII_deputies, deputies[deputies$name %in% debug,1:2])
 
+# IV pol. group was founded only 10 days after ConteII starting date. The script
+# codes IV MPs as switcher. Recognizing the weight of IV MPs we must recode them manually
+iv <- deputies %>% 
+  filter(party == "ITALIA VIVA") %>% 
+  filter(int_start(date) == ymd("2019-09-19") & int_end(date) > int_end(conteII_date)) %>% 
+  select(!(date))
+
+conteII_deputies$party <- ifelse(conteII_deputies$name %in% iv$name, "ITALIA VIVA", conteII_deputies$party)
 
 # Removing tmp variables --------------------------------------------------
 
-rm(conteI_date, conteII_date, debug, index, deputies, duplicate)
+rm(conteI_date, conteII_date, debug, index, deputies, duplicate, iv)
 

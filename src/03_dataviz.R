@@ -21,9 +21,9 @@ V(conteI_network)$color <- ifelse(V(conteI_network)$party == "MOVIMENTO 5 STELLE
 V(conteI_network)$color <- ifelse(V(conteI_network)$party == "LEGA - SALVINI PREMIER", "forestgreen", V(conteI_network)$color)
 V(conteI_network)$color <- ifelse(V(conteI_network)$party == "FORZA ITALIA - BERLUSCONI PRESIDENTE", "lightblue", V(conteI_network)$color)
 V(conteI_network)$color <- ifelse(V(conteI_network)$party == "PARTITO DEMOCRATICO", "red", V(conteI_network)$color)
-V(conteI_network)$color <- ifelse(V(conteI_network)$party == "LIBERI E UGUALI", "magenta", V(conteI_network)$color)
-V(conteI_network)$color <- ifelse(V(conteI_network)$party == "MISTO", "peachpuff4", V(conteI_network)$color)
-V(conteI_network)$color <- ifelse(V(conteI_network)$party == "SWITCHER/DECAYED", "grey", V(conteI_network)$color)
+V(conteI_network)$color <- ifelse(V(conteI_network)$party == "LIBERI E UGUALI", "#EA3323", V(conteI_network)$color)
+V(conteI_network)$color <- ifelse(V(conteI_network)$party == "MISTO", "#DDDDDD", V(conteI_network)$color)
+V(conteI_network)$color <- ifelse(V(conteI_network)$party == "SWITCHER/DECAYED", NA, V(conteI_network)$color)
 
 color <- unique(V(conteI_network)$party)
 party_color <-  c("lightblue", "#003366", "red", "yellow", NA, "forestgreen", "peachpuff4", "magenta")
@@ -68,14 +68,15 @@ conteII_network <- graph_from_data_frame(conteII, directed = T, vertices = conte
 
 # codifica colori partito
 V(conteII_network)$color <- NA
-V(conteII_network)$color <- ifelse(V(conteII_network)$party == "FRATELLI D'ITALIA", "#003366","orange")
+V(conteII_network)$color <- ifelse(V(conteII_network)$party == "FRATELLI D'ITALIA", "#003366", NA)
 V(conteII_network)$color <- ifelse(V(conteII_network)$party == "MOVIMENTO 5 STELLE", "yellow", V(conteII_network)$color)
 V(conteII_network)$color <- ifelse(V(conteII_network)$party == "LEGA - SALVINI PREMIER", "forestgreen", V(conteII_network)$color)
 V(conteII_network)$color <- ifelse(V(conteII_network)$party == "FORZA ITALIA - BERLUSCONI PRESIDENTE", "lightblue", V(conteII_network)$color)
 V(conteII_network)$color <- ifelse(V(conteII_network)$party == "PARTITO DEMOCRATICO", "red", V(conteII_network)$color)
-V(conteII_network)$color <- ifelse(V(conteII_network)$party == "LIBERI E UGUALI", "magenta", V(conteII_network)$color)
-V(conteII_network)$color <- ifelse(V(conteII_network)$party == "MISTO", "peachpuff4", V(conteII_network)$color)
-V(conteII_network)$color <- ifelse(V(conteII_network)$party == "SWITCHER/DECAYED", "grey", V(conteII_network)$color)
+V(conteII_network)$color <- ifelse(V(conteII_network)$party == "LIBERI E UGUALI", "#EA3323", V(conteII_network)$color)
+V(conteII_network)$color <- ifelse(V(conteII_network)$party == "MISTO", "#DDDDDD", V(conteII_network)$color)
+V(conteII_network)$color <- ifelse(V(conteII_network)$party == "SWITCHER/DECAYED", NA, V(conteII_network)$color)
+V(conteII_network)$color <- ifelse(V(conteII_network)$party == "ITALIA VIVA", "#C83282", V(conteII_network)$color)
 
 color <- unique(V(conteII_network)$party)
 party_color <-  c("lightblue", "#003366", "red", "yellow", NA, "forestgreen", "peachpuff4", "magenta")
