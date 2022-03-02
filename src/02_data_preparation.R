@@ -53,7 +53,8 @@ conteI$date <- ymd(conteI$date)
 # Extracting Conte I deputies and contributors e dealing with duplicate nodes
 
 conteI_deputies <- deputies %>% 
-  filter(int_start(date) < int_end(conteI_date))
+  filter(int_start(date) < int_end(conteI_date)) %>% 
+  filter(!(int_end(date) < int_start(conteI_date)))
 
 duplicate <- conteI_deputies %>% 
   group_by(name) %>% 
@@ -76,14 +77,11 @@ table(unique(conteI$joint_signatory) %in% conteI_deputies$name)
 
 # since there one of the deputies is no included on the nodes df we must debug manually!
 
-which(!(conteI$joint_signatory %in% conteI_deputies$name))
-conteI[9020,]
-
-# since the corespondent MP have taken office after the Conte I government and THEN
-# joint the law, we will remove the observation.
-
-conteI <- conteI %>% 
-  slice(-(9020))
+index <- which(!(conteI$joint_signatory %in% conteI_deputies$name))
+index
+debug <- conteI[index,]
+debug <- unique(debug$joint_signatory)
+conteI_deputies <- rbind(conteI_deputies, deputies[deputies$name %in% debug,1:2])
 
 # Conte II data preparation --------------------------------------------------
 
@@ -101,7 +99,8 @@ conteII$date <- ymd(conteII$date)
 
 # Extracting Conte II deputies and contributors
 conteII_deputies <-  deputies %>% 
-  filter(int_start(deputies$date) <= int_start(conteII_date))
+  filter(int_start(date) < int_end(conteII_date)) %>% 
+  filter(!(int_end(date) < int_start(conteII_date)))
 
 # Extracting Conte II deputies and contributors e dealing with duplicate nodes
 duplicate <- conteII_deputies %>% 
