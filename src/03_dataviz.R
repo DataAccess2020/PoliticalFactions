@@ -1,102 +1,105 @@
 # Conte I Social Network Analysis------------------------------------------------
 
-# Conte I in carica dal 1º giugno 2018 al 5 settembre 2019, 
-# per un totale di 461 giorni, ovvero 1 anno, 3 mesi e 4 giorni. 
-# Dimissioni 20 agosto 2019.
+# Edges preparations
+conteI_edges <- conteI %>% 
+  select(!c(num, date)) %>%
+  relocate(joint_signatory)
+  
+# Computating igraph network from edges df:
+conteI_network <- graph_from_data_frame(conteI_edges, directed = T, vertices = conteI_deputies)
 
-#Selecting edges variables
-
-conteI <- conteI %>% 
-  select(!c(num, date))
-
-# network governo 
-conteI_network <- graph_from_data_frame(conteI, directed = T, vertices = conteI_deputies)
-
+# Coding the colors for each political party:
 #unique(V(conteI_network)$party)
-
-# codifica colori partito
 V(conteI_network)$color <- NA
 V(conteI_network)$color <- ifelse(V(conteI_network)$party == "FRATELLI D'ITALIA", "#003366","orange")
 V(conteI_network)$color <- ifelse(V(conteI_network)$party == "MOVIMENTO 5 STELLE", "yellow", V(conteI_network)$color)
 V(conteI_network)$color <- ifelse(V(conteI_network)$party == "LEGA - SALVINI PREMIER", "forestgreen", V(conteI_network)$color)
 V(conteI_network)$color <- ifelse(V(conteI_network)$party == "FORZA ITALIA - BERLUSCONI PRESIDENTE", "lightblue", V(conteI_network)$color)
 V(conteI_network)$color <- ifelse(V(conteI_network)$party == "PARTITO DEMOCRATICO", "red", V(conteI_network)$color)
-V(conteI_network)$color <- ifelse(V(conteI_network)$party == "LIBERI E UGUALI", "#EA3323", V(conteI_network)$color)
+V(conteI_network)$color <- ifelse(V(conteI_network)$party == "LIBERI E UGUALI", "orange", V(conteI_network)$color)
 V(conteI_network)$color <- ifelse(V(conteI_network)$party == "MISTO", "#DDDDDD", V(conteI_network)$color)
 V(conteI_network)$color <- ifelse(V(conteI_network)$party == "SWITCHER/DECAYED", NA, V(conteI_network)$color)
 
-color <- unique(V(conteI_network)$party)
-party_color <-  c("lightblue", "#003366", "red", "yellow", NA, "forestgreen", "peachpuff4", "magenta")
 
-hub_sc <- hub_score(conteI_network, weights=NA)$vector
-aut_sc <- authority_score(conteI_network, weights=NA)$vector
-community <- cluster_edge_betweenness(conteI_network)
+# Fruchterman-Reingold layout computation:
+l <- layout_with_fr(conteI_network, niter = 2000)
 
-l <- layout_with_fr(conteI_network)
-# plot network
+# Plot network and .png export:
 png(filename = here("fig/conteI.png"), width = 1980, height = 1080)
+
 plot(
-     conteI_network, 
-     main = "Conte I",
-     vertex.size = 7, 
-     vertex.label = NA,
-     vertex.label.cex = .7,
-     edge.arrow.size = .1,
-     edge.width = .7,
-     frame = F,
-     layout = l)
+  
+  ## Network main arguments
+  conteI_network, 
+  main = "Conte I",
+  frame = F,
+  layout = l,
+  
+  ## Vertexes aes:
+  vertex.size = 7, 
+  vertex.label = NA,
+  vertex.label.cex = .7,
+  vertex.color = adjustcolor(V(conteI_network)$color, alpha.f = 0.9),
+  
+  ## Edges aes: 
+  edge.arrow.size = .05,
+  edge.width = .3,
+  edge.curved=0.3)
 dev.off()
 
-#plot(0,type='n',axes=FALSE,ann=FALSE)
-#legend("bottom", legend=color, bty = "n", cex = 0.75, 
-#       pt.cex = 3, pch=20, col = party_color ,
-#       horiz = FALSE,ncol = 1)
-
+#removing edges df
+rm(conteI_edges)
 
 # Conte II Social Network Analysis ------------------------------------------------
 
 
-#Selecting edges variables
+# Edges preparations
+conteII_edges <- conteII %>% 
+  select(!c(num, date)) %>% 
+  relocate(joint_signatory)
 
-conteII <- conteII %>% 
-  select(!c(num, date))
+# Computating igraph network from edges df:
+conteII_network <- graph_from_data_frame(conteII_edges, directed = T, vertices = conteII_deputies)
 
-# network governo 
-conteII_network <- graph_from_data_frame(conteII, directed = T, vertices = conteII_deputies)
-
+# Coding the colors for each political party:
 #unique(V(conteI_network)$party)
-
-# codifica colori partito
 V(conteII_network)$color <- NA
 V(conteII_network)$color <- ifelse(V(conteII_network)$party == "FRATELLI D'ITALIA", "#003366", NA)
 V(conteII_network)$color <- ifelse(V(conteII_network)$party == "MOVIMENTO 5 STELLE", "yellow", V(conteII_network)$color)
 V(conteII_network)$color <- ifelse(V(conteII_network)$party == "LEGA - SALVINI PREMIER", "forestgreen", V(conteII_network)$color)
 V(conteII_network)$color <- ifelse(V(conteII_network)$party == "FORZA ITALIA - BERLUSCONI PRESIDENTE", "lightblue", V(conteII_network)$color)
 V(conteII_network)$color <- ifelse(V(conteII_network)$party == "PARTITO DEMOCRATICO", "red", V(conteII_network)$color)
-V(conteII_network)$color <- ifelse(V(conteII_network)$party == "LIBERI E UGUALI", "#EA3323", V(conteII_network)$color)
+V(conteII_network)$color <- ifelse(V(conteII_network)$party == "LIBERI E UGUALI", "orange", V(conteII_network)$color)
 V(conteII_network)$color <- ifelse(V(conteII_network)$party == "MISTO", "#DDDDDD", V(conteII_network)$color)
 V(conteII_network)$color <- ifelse(V(conteII_network)$party == "SWITCHER/DECAYED", NA, V(conteII_network)$color)
 V(conteII_network)$color <- ifelse(V(conteII_network)$party == "ITALIA VIVA", "#C83282", V(conteII_network)$color)
 
-color <- unique(V(conteII_network)$party)
-party_color <-  c("lightblue", "#003366", "red", "yellow", NA, "forestgreen", "peachpuff4", "magenta")
+# Fruchterman-Reingold layout computation:
+l <- layout_with_fr(conteII_network, niter = 2000)
 
-hub_sc <- hub_score(conteII_network, weights=NA)$vector
-aut_sc <- authority_score(conteII_network, weights=NA)$vector
-community <- cluster_edge_betweenness(conteII_network)
-
-l <- layout_with_fr(conteII_network)
-# plot network
+# plot network and .png export:
 png(filename = here("fig/ConteII.png"), width = 1980, height = 1080)
+
 plot(
+  
+  ## Network main arguments
   conteII_network, 
   main = "Conte II",
+  frame = F,
+  layout = l,
+  
+  ## Vertexes aes:
   vertex.size = 7, 
   vertex.label = NA,
   vertex.label.cex = .7,
-  edge.arrow.size = .1,
-  edge.width = .7,
-  frame = F,
-  layout = l)
+  vertex.color = adjustcolor(V(conteII_network)$color, alpha.f = 0.9),
+  
+  ## Edges aes: 
+  edge.arrow.size = .05,
+  edge.width = .3,
+  edge.curved=0.3)
 dev.off()
+
+#removing edges df
+rm(conteII_edges)
 
