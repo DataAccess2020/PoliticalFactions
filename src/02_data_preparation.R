@@ -134,7 +134,7 @@ table(unique(conteII$joint_signatory) %in% conteII_deputies$name)
 
 # manual inspection:
 index <- which(!(conteII$joint_signatory %in% conteII_deputies$name))
-index
+#index
 debug <- conteII[index, ]
 debug <- unique(debug$joint_signatory)
 # the inspection revealed that the missing MPs

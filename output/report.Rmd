@@ -31,10 +31,18 @@ library(stringr)
 
 # Introduction
 
-In this short paper we want to analyze the [@de_giorgi_2018]
+In this short analysis, we use the open data from the Chamber of the Deputies of the Italian Parliament to investigate the legislative co-sponsorship of the members of the Chamber of the Deputies. The analysis would cover the legislative process that ensued under Conte I and Conte II cabinets within the legislature XVIII of Italy.
+
+The analysis aims to understand the presence of political factions underlying the legislative process in the Lower chamber of the Italian Parliament by employing social network analysis techniques. Moreover, we will analyse the cooperative behaviour of the Parliament parties computing the *intra-opposition party bill differentiation*, as shown by De Giorgi & Dias [-@de_giorgi_2018].
+
+Other sources
+
+Lastly, this project also strives to create a fully reproducible workflow documented, commented and hosted in a public Github repository.
+
 
 
 # Methods
+
 
 # Results
 
