@@ -5,34 +5,38 @@ deputies <- vroom(here("data/deputies.csv"),
                   #skipping the non used data
                   col_select = c("name", "partito", "s_office", "e_office"))
 
+
+
 deputies <- deputies %>%
-  # removing the office term included in the party var
+  
+  # removing office term included in the party name var
+  # party is provide as "PartyX (1900-00-01-[...])" 
+  # we need to remove what's after the first "("
   separate(col= partito,
            into = c("party","trash"),
            sep= "\\(") %>%
-  select(!(trash)) %>%
-  mutate(party = str_trim(party))
+  mutate(
+    # arty column has space after the party name, then we must trim it!
+    party = str_trim(party),
+    
+    # parsing offices data into a single interval format
+    date = interval(start = ymd(s_office),
+                    end = ymd(ifelse(test = is.na(deputies$e_office),
+                                     #since the 18th leg is still in office some MPs does not have ending date
+                                     yes = 20220228,
+                                     no = deputies$e_office)))) %>%
+  
+  # dropping working variables no more useful
+  select(!c(trash, s_office, e_office)) %>% 
 
-
-# Parsing offices data vars
-deputies$e_office <- ifelse(test = is.na(deputies$e_office),
-                            yes = 20220228, 
-                            no = deputies$e_office)
-
-deputies <- deputies %>%
-  mutate(s_office = ymd(s_office),
-         e_office = ymd(e_office))
-
-# mutating dates into interval format
-deputies <- deputies %>%
-  mutate(date = interval(start = s_office, end = e_office)) %>%
-  select(!c(s_office, e_office))
-
-# drop deputies which have taken office AFTER the ConteII int. end:
-deputies <- deputies %>%
+  # drop deputies which have taken office *AFTER* ConteII cabinet
   filter(int_start(date) < ymd("2021-12-02"))
+  
+
 
 # Conte I data preparation ------------------------------------------------
+
+
 
 # import contributors.csv:
 conteI <- vroom(here("data/conteI.csv"),
