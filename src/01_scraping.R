@@ -73,7 +73,8 @@ OFFSET"
 
 #since the Virtuoso Endpoint have a 10000 results limits it need an offset
 # in order to scrapes all the triples
-query_offset <- c("0","5000","10000","15000","20000","25000","30000","35000")
+query_offset <- c("0", "5000", "10000", "15000",
+                  "20000", "25000", "30000", "35000")
 
 
 i <- 0
@@ -87,7 +88,7 @@ for (i in 1:length(query_offset)) {
   Sys.sleep(2)
 }
 #Data Updated To 20 of February 2021 10:00 AM UTC+01:00
-write.csv(df_law, here::here("data/conteI.csv"))
+write.csv(df_law, here::here("data/conte_i.csv"))
 
 
 # Conte II ----------------------------------------------------------------
@@ -145,5 +146,5 @@ for (i in 1:length(query_offset)) {
   Sys.sleep(2)
 }
 #Data Updated To 20 of February 2021 10:00 AM UTC+01:00
-write.csv(df_law, here::here("data/conteII.csv"))
+write.csv(df_law, here::here("data/conte_ii.csv"))
 
