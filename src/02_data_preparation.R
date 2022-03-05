@@ -37,23 +37,26 @@ deputies <- deputies %>%
 # Conte I data preparation ------------------------------------------------
 
 
-
 # import contributors.csv:
 conteI <- vroom(here("data/conteI.csv"),
                 # skipping the first non-interesting variable
                 col_select = c("num":"joint_signatory"))
 
-# Due to the construction of dati.camera.it database it is easier preparing data
-# within R environment:
-
-# removing ducplicate edges
-conteI <- unique(conteI)
-
 # ConteI cabinet dates
 conteI_date <- interval(ydm("2018-31-05"), ydm("2019-04-09"))
 
-# Parsing dates
-conteI$date <- ymd(conteI$date)
+# Due to the construction of dati.camera.it database it is easier preparing data
+# within R environment:
+
+conteI <- conteI %>% 
+  
+  # removing duplicate rows
+  distinct(.) %>% 
+  
+  # Parsing dates
+  mutate(date = ymd(date))
+
+
 
 # Extracting Conte I deputies and contributors
 conteI_deputies <- deputies %>%
@@ -63,27 +66,49 @@ conteI_deputies <- deputies %>%
 # Some MPs, who have changed party or decayed during Conte I cabinet
 # are coded as SWITCHER/DECAYED
 duplicate <- conteI_deputies %>%
+  
+  # group by MPs names
   group_by(name) %>%
+  
+  # n as how many time a unique name appears
   summarise(n = n()) %>%
+  
+  # filter only the names who appear more than one time
   filter(n >1) %>%
+  
+  # coding party as "SWITCHER/DECAYED"
   add_column(party = "SWITCHER/DECAYED") %>%
+  
+  #selecting only name an party to match the structure of conteI_deputies
   select(name, party)
-  #after selecting non unique MPs we remove them with
-  # an anti joint from the deputies df
+
+
+
 conteI_deputies <- conteI_deputies %>%
+  
+  # remove switcher from conteI_deputies with an anti joint fun
   anti_join(duplicate, by = "name") %>%
-  select(!(date))
-  # lastly we append again the Switcher with the recoded party id
-conteI_deputies <- rbind(conteI_deputies, duplicate)
+  
+  #drop the date column, no more useful
+  select(!(date)) %>% 
+  
+  #bind the Switcher to conteI_deputies
+  bind_rows(., duplicate)
+  
+
 
 #remove orphan nodes
 conteI_deputies <- conteI_deputies[
   - (which(conteI_deputies$name %!in% conteI$signatory &
   conteI_deputies$name %!in% conteI$joint_signatory)), ]
 
+
+
 # debug to check eventual non represented edges
 table(unique(conteI$signatory) %in% conteI_deputies$name)
 table(unique(conteI$joint_signatory) %in% conteI_deputies$name)
+
+
 
 # since there is MPs no included in the nodes df we must debug it!
 index <- which(!(conteI$joint_signatory %in% conteI_deputies$name))
