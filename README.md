@@ -20,7 +20,7 @@ Pubblicazioni sul:
 - *H1* I partiti di governo erano coesi nella proposta dei testi legislativi.
 - *H2* All'interno dei parititi di governo non erano presenti non erano presenti evidenti fazioni politiche.
 
-Il meccanismo di supporto risulta ancora da definire.
+Il meccanismo di analisi si basa sulla Social Network Analysis, grazie all'algoritmo di repulsione Fruchterman-Reingold, e tramite il calcolo dell'indice Intra-Opposition party bill come definito da De Giorgi & Dias (2018).
 
 ### Dateset e operazionalizzazione di massima
 

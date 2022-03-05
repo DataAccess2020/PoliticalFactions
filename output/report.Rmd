@@ -4,7 +4,7 @@ subtitle: "Subtitle"
 #author: "Nicola Casarin"
 institute: "UNIMI"
 #date: "`r format(Sys.time(), '%Y %B %d')`"
-fontsize: 12pt
+#fontsize: 12pt
 output: 
   pdf_document:
     latex_engine: pdflatex
@@ -38,7 +38,6 @@ The analysis aims to understand the presence of political factions underlying th
 Other sources
 
 Lastly, this project also strives to create a fully reproducible workflow documented, commented and hosted in a public Github repository.
-
 
 
 # Methods
