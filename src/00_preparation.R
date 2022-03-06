@@ -1,9 +1,9 @@
+library(here)
 library(SPARQL)
 library(tidyverse)
-library(stringr)
-library(here)
 library(vroom)
-library(lubridate)
-library(igraph)
 library(stringr)
+library(lubridate)
+library(ggplot2)
+library(igraph)
 `%!in%` <- Negate(`%in%`) # not in function declaration
