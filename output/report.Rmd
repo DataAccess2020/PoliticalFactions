@@ -106,7 +106,7 @@ Then we could query the database:
 SPARQL(endpoint, bio)
 ```
 
-Subsequently, we retrieved the bills. The construction of this query encountered a significant problem: the endpoint could not provide more than $10 000$ results at once, and we had to use a `subquery-offset` method to bypass this limitation.
+Subsequently, we retrieved the bills taking the number of the bill, the date of the first proposal, the first signatory and the joint signatories. The construction of this query encountered a significant problem: the endpoint could not provide more than $10 000$ results at once, and we had to use a `subquery-offset` method to bypass this limitation.
 To restrict the result only to the Conte I cabinet, we used the triple `?atto ocd:rif_governo <http://dati.camera.it/ocd/governo.rdf/g142>`.
 
 ```{r bills query}
@@ -142,13 +142,13 @@ LIMIT 10000
 OFFSET"
 ```
 
-And we defined the offset limits:
+Then, we defined the offset limits:
 ```{r offset}
 query_offset <- c("0", "5000", "10000", "15000",
                   "20000", "25000", "30000", "35000")
 ```
 
-Lastly, we build a for loop to make consecutive calls to the database; for each call, a different offset limit is concatenated to the query. This method permits retrieval of more than $10 000$ observations:
+Lastly, we build a for loop to make consecutive calls to the database; a different offset limit is concatenated to the query for each call. This method permits retrieval of more than $10 000$ observations:
 
 ```{r query loop, eval = F}
 for (i in 1:length(query_offset)) {
@@ -164,7 +164,7 @@ for (i in 1:length(query_offset)) {
 Since scraping large sets of data could be burdensome for the host, we set the offset to half of the limits (blocks of 5000 observations each), and after every call, the loop waits 2 seconds.
 
 To retrieve the bills for Conte II cabinet, we used the same query structure, changing the "filter" triple to
-``?atto ocd:rif_governo <http://dati.camera.it/ocd/governo.rdf/g162` [from `g142` to `g162`].
+`?atto ocd:rif_governo <http://dati.camera.it/ocd/governo.rdf/g162` [from `g142` to `g162`].
 
 Each result was exported into a CSV file after the retrieval:
 
@@ -174,9 +174,152 @@ write.csv(result2, here::here("data/conte_i.csv"))
 write.csv(result3, here::here("data/conte_ii.csv"))
 ```
 
-The `here` package provides a relative path to the top-level directory of the project, simplifying the referencing of the data regardless of the OS or the absolute path of the directories.
+`here` package provides a relative path to the top-level directory of the project, simplifying the referencing of the data regardless of the OS or the absolute path of the directories.
 
 ## Data preparation
+
+Since the resulting queries are not ready-made for the subsequent analysis, we must prepare the data. For this purpose, we could define functions for the needed purposes.
+
+### Deputies preparation
+
+We define the function for preparing the deputies:
+
+```{r deputies preparation}
+prep_deputies <- function(deputies, end_date = "2021-12-02") {
+  
+  deputies <- deputies %>%
+  
+  # removing office term included in the party name var party is provide as
+  # "PartyX (1900-00-01-[...])" we need to remove what's after the first "("
+    separate(col = partito,
+             into = c("party", "trash"),
+             sep = "\\(") %>%
+    mutate(
+      # arty column has space after the party name, then we must trim it!
+      party = str_trim(party),
+    
+      # parsing offices data into a single interval format
+      date = interval(start = ymd(s_office),
+                      end = ymd(ifelse(test = is.na(deputies$e_office),
+                                       #since the 18th leg is still in office
+                                       #some MPs does not have ending date
+                                       yes = 20220228,
+                                       no = deputies$e_office)))) %>%
+  
+    # dropping working variables no more useful
+    select(!c(trash, s_office, e_office)) %>%
+    
+    # drop deputies which have taken office *AFTER* Conte_ii cabinet
+    filter(int_start(date) < lubridate::ymd(end_date))
+
+  #reuturn value
+  return(deputies)
+}
+```
+
+The function's primary purpose is to deal with the query's problematic results. 
+The query returned three columns:
+
+- name of the deputy
+- party with which 
+- start date
+- end date
+
+The major problem is the party column because it includes the party name and the terms of the mandate, written between round brackets.
+With `separate()`, we can split the party name from the terms, which are unused since we have it already. Then, we parse the start and end dates into an interval object.
+
+### Contributions preparation
+
+```{r contributions}
+prep_cabinet <- function(cabinet, cabinet_int, deputies) {
+  `%!in%` <- Negate(`%in%`) # "not in" function declaration
+  
+  #define cabinet name
+  name <- as.character(substitute(cabinet))  
+ 
+
+   # Due to the construction of dati.camera.it database it is easier preparing data
+   # within R environment:
+   cabinet <- cabinet %>%
+     
+     # removing duplicate rows
+     distinct(.) %>%
+     
+     # Parsing dates
+     mutate(date = ymd(date))
+   
+   # Extracting deputies and contributors
+   cabinet_deputies <- deputies %>%
+     filter(int_start(date) < int_end(cabinet_int)) %>%
+     filter(!(int_end(date) < int_start(cabinet_int)))
+   
+   # Since some MPs, may have changed party or decayed in between
+   # they must be coded as SWITCHER/DECAYED
+   is_duplicate <- cabinet_deputies %>%
+     
+     # group by MPs names
+     group_by(name) %>%
+     
+     # n as how many time a unique name appears
+     summarise(n = n()) %>%
+     
+     # filter only the names who appear more than one time
+     filter(n > 1) %>%
+     
+     # coding party as "SWITCHER/DECAYED"
+     add_column(party = "SWITCHER/DECAYED") %>%
+     
+     #selecting only name an party to match the structure of cabinet_deputies
+     select(name, party)
+   
+   
+   cabinet_deputies <- cabinet_deputies %>%
+     
+     # remove switcher from cabinet_deputies with an anti joint fun
+     anti_join(is_duplicate, by = "name") %>%
+     
+     #drop the date column, no more useful
+     select(!(date)) %>%
+     
+     #bind the Switcher to cabinet_deputies
+     bind_rows(., is_duplicate)
+   
+   
+   #remove eventual orphan nodes
+   #Since we takes also bills proposal, MPs could join the bill AFTER
+   # the end of the cabinet and need to be dropped
+   cabinet_deputies <- cabinet_deputies[
+     - (which(cabinet_deputies$name %!in% cabinet$signatory &
+                cabinet_deputies$name %!in% cabinet$joint_signatory)), ]
+   
+   # since there is MPs no included in the nodes df we must debug it!
+   index <- which(!(cabinet$joint_signatory %in% cabinet_deputies$name))
+   debug <- cabinet[index, ]
+   debug <- unique(debug$joint_signatory)
+   cabinet_deputies <- rbind(cabinet_deputies,
+                             deputies[deputies$name %in% debug, 1:2])
+   
+   #assign the contributions DFs
+   assign(name, 
+          cabinet,
+          envir = parent.frame())
+   
+   #assign the deputies DFs
+   assign(stringr::str_c(name, "_deputies"),
+          cabinet_deputies,
+          envir = parent.frame())
+   }
+
+```
+
+The function consists of two primary purposes: first, removing the duplicates observation on the contributions dataframe. Furthermore, it deals with a significant issue: Italian members of Parliament can change the party during their mandate. This, cause the presence of duplicated names (vertices in the SNA) which must be removed.
+
+The issue has been addressed by filtering for the deputies whose office mandate started *before* the cabinet end date and dropping the deputies whose office mandate started *after* the cabinet end date.
+Then, the deputies who appear more than once are saved in a temporary object, coding the `party` variables as "SWITCHER/DECAYED".
+Lastly, the duplicates deputies are removed from the `cabinet_deputies` dataframe using an `anti_join()`, and then they are appended again to the dataframe. This method permits to have solely unique observations in the `cabinet_deputies` dataframe. Hence, the observations that appeared more than once are now unique, with the party coded as "SWITCHER/DECAYED"
+
+The function addresses another issue. Some bills have latecomers associated as joint signatories since the lengthy legislative procedure. Possibly, these latecomers have not taken office under the cabinet in analysis and must be removed.
+The method implemented is defined in a slightly convoluted manner which must be addressed in future releases.
 
 
 
