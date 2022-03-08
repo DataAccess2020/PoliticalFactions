@@ -26,7 +26,7 @@ cosponsor <- function(contributions,
 # Contributions preparation -----------------------------------------------
 
 
-cabinet_prep <- function(cabinet, cabinet_int, deputies) {
+prep_cabinet <- function(cabinet, cabinet_int, deputies) {
   `%!in%` <- Negate(`%in%`) # "not in" function declaration
   
   #define cabinet name
@@ -78,18 +78,13 @@ cabinet_prep <- function(cabinet, cabinet_int, deputies) {
      
      #bind the Switcher to cabinet_deputies
      bind_rows(., is_duplicate)
-   
-   
+     
    #remove eventual orphan nodes
-   #Since we takes also bills proposal, MPs could join the bill AFTER
-   # the end of the cabinet and need to be dropped
-   cabinet_deputies <- cabinet_deputies[
-     - (which(cabinet_deputies$name %!in% cabinet$signatory &
-                cabinet_deputies$name %!in% cabinet$joint_signatory)), ]
+   cabinet_deputies <-  cabinet_deputies %>% 
+      filter(!(name %!in% c(cabinet$signatory,cabinet$joint_signatory)))
    
    # since there is MPs no included in the nodes df we must debug it!
-   index <- which(!(cabinet$joint_signatory %in% cabinet_deputies$name))
-   debug <- cabinet[index, ]
+   debug <- cabinet[which(!(cabinet$joint_signatory %in% cabinet_deputies$name)), ]
    debug <- unique(debug$joint_signatory)
    cabinet_deputies <- rbind(cabinet_deputies,
                              deputies[deputies$name %in% debug, 1:2])
@@ -108,7 +103,7 @@ cabinet_prep <- function(cabinet, cabinet_int, deputies) {
 
 # Deputies preparation --------------------------------------------------
 
-deputies_prep <- function(deputies, end_date = "2021-12-02") {
+prep_deputies <- function(deputies, end_date = "2021-12-02") {
   
   deputies <- deputies %>%
   

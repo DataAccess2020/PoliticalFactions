@@ -6,7 +6,7 @@ deputies <- vroom(here("data/deputies.csv"),
                   col_select = c("name", "partito", "s_office", "e_office"))
 
 
-deputies <- deputies_prep(deputies)
+deputies <- prep_deputies(deputies)
 
 
 # Conte I data preparation ------------------------------------------------
@@ -19,7 +19,7 @@ conte_i <- vroom(here("data/conte_i.csv"),
 # Conte_i cabinet dates
 conte_i_date <- interval(ydm("2018-31-05"), ydm("2019-04-09"))
 
-cabinet_prep(cabinet = conte_i, cabinet_int = conte_i_date, deputies = deputies)
+prep_cabinet(cabinet = conte_i, cabinet_int = conte_i_date, deputies = deputies)
 
 
 
@@ -33,7 +33,7 @@ conte_ii <- vroom(here("data/conte_ii.csv"),
 # conte_ii cabinet dates
 conte_ii_date <- interval(ydm("2019-04-09"), ydm("2021-12-02"))
 
-cabinet_prep(cabinet = conte_ii, cabinet_int = conte_ii_date, deputies = deputies)
+prep_cabinet(cabinet = conte_ii, cabinet_int = conte_ii_date, deputies = deputies)
 
 
 #' Since IV pol. group was founded only 10 days after Conte_ii starting date.
