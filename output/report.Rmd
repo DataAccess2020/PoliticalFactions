@@ -27,7 +27,23 @@ library(vroom)
 library(lubridate)
 library(igraph)
 library(stringr)
+library(kableExtra)
 `%!in%` <- Negate(`%in%`) # "not in" function declaration
+
+# import deputies.csv
+deputies <- vroom(here("data/deputies.csv"),
+                  #skipping the non used data
+                  col_select = c("name", "partito", "s_office", "e_office"))
+
+# import contributors.csv and cabine dates:
+conte_i <- vroom(here("data/conte_i.csv"),
+                # skipping the first non-interesting variable
+                col_select = c("num":"joint_signatory"))
+
+# Import contributions during Conte II cabinets
+conte_ii <- vroom(here("data/conte_ii.csv"),
+                #skipping the non-interesting variable
+                 col_select = c("num":"joint_signatory"))
 ```
 
 # Introduction
@@ -53,7 +69,7 @@ As a general rule, the code was written using the Tidyverse verbs and syntax.
 
 ## Package loading 
 
-```{r Package loading, message=FALSE, warning=FALSE}
+```{r Package loading, eval=FALSE}
 library(here)
 library(SPARQL)
 library(tidyverse)
@@ -106,8 +122,8 @@ Then we could query the database:
 SPARQL(endpoint, bio)
 ```
 
-Subsequently, we retrieved the bills taking the number of the bill, the date of the first proposal, the first signatory and the joint signatories. The construction of this query encountered a significant problem: the endpoint could not provide more than $10 000$ results at once, and we had to use a `subquery-offset` method to bypass this limitation.
-To restrict the result only to the Conte I cabinet, we used the triple `?atto ocd:rif_governo <http://dati.camera.it/ocd/governo.rdf/g142>`.
+Subsequently, we retrieved the bills taking the number of the bill, the date of the first proposal, the first signatory and the joint signatories. The construction of this query encountered a significant problem: the endpoint could not provide more than $10 000$ results at once. So, we had to use a `subquery-offset` method to bypass this limitation.
+To restrict the results only to the first Conte's cabinet, we used the triple `?atto ocd:rif_governo <http://dati.camera.it/ocd/governo.rdf/g142>` as filter.
 
 ```{r bills query}
 query_main <- "
@@ -142,13 +158,14 @@ LIMIT 10000
 OFFSET"
 ```
 
-Then, we defined the offset limits:
+Then, we defined the vector with offset limits:
 ```{r offset}
 query_offset <- c("0", "5000", "10000", "15000",
                   "20000", "25000", "30000", "35000")
 ```
 
-Lastly, we build a for loop to make consecutive calls to the database; a different offset limit is concatenated to the query for each call. This method permits retrieval of more than $10 000$ observations:
+Lastly, we defined a for loop to make consecutive calls to the database, changing offset limit for each call. 
+This method permits retrieval of more than $10 000$ observations:
 
 ```{r query loop, eval = F}
 for (i in 1:length(query_offset)) {
@@ -161,20 +178,18 @@ for (i in 1:length(query_offset)) {
 }
 ```
 
-Since scraping large sets of data could be burdensome for the host, we set the offset to half of the limits (blocks of 5000 observations each), and after every call, the loop waits 2 seconds.
+Since scraping large chunks of data could be burdensome for the host, we set the offset to half of the endopoint's limit ( 5000 observations each), and, after every call, the loop sleeps for 2 seconds.
 
-To retrieve the bills for Conte II cabinet, we used the same query structure, changing the "filter" triple to
+To retrieve the bills for the second Conte's cabinet, we used the same query structure, changing the "filter" triple to
 `?atto ocd:rif_governo <http://dati.camera.it/ocd/governo.rdf/g162` [from `g142` to `g162`].
 
-Each result was exported into a CSV file after the retrieval:
+Each result was exported into a CSV file after the retrieval^[`here` package provides a relative path to the top-level directory of the project, simplifying the referencing of the data regardless of the OS or the absolute path of the directories]:
 
 ```{r csv export, eval = F}
 write.csv(result1, here::here("data/deputies.csv"))
 write.csv(result2, here::here("data/conte_i.csv"))
 write.csv(result3, here::here("data/conte_ii.csv"))
 ```
-
-`here` package provides a relative path to the top-level directory of the project, simplifying the referencing of the data regardless of the OS or the absolute path of the directories.
 
 ## Data preparation
 
@@ -218,7 +233,7 @@ prep_deputies <- function(deputies, end_date = "2021-12-02") {
 ```
 
 The function's primary purpose is to deal with the query's problematic results. 
-The query returned three columns:
+The query returned four raw columns:
 
 - name of the deputy
 - party with which 
@@ -238,8 +253,8 @@ prep_cabinet <- function(cabinet, cabinet_int, deputies) {
   name <- as.character(substitute(cabinet))  
  
 
-   # Due to the construction of dati.camera.it database it is easier preparing data
-   # within R environment:
+   # Due to the construction of dati.camera.it database it's easier preparing
+   #data within R environment:
    cabinet <- cabinet %>%
      
      # removing duplicate rows
@@ -284,17 +299,12 @@ prep_cabinet <- function(cabinet, cabinet_int, deputies) {
      #bind the Switcher to cabinet_deputies
      bind_rows(., is_duplicate)
    
-   
    #remove eventual orphan nodes
-   #Since we takes also bills proposal, MPs could join the bill AFTER
-   # the end of the cabinet and need to be dropped
-   cabinet_deputies <- cabinet_deputies[
-     - (which(cabinet_deputies$name %!in% cabinet$signatory &
-                cabinet_deputies$name %!in% cabinet$joint_signatory)), ]
+   cabinet_deputies <-  cabinet_deputies %>% 
+      filter(!(name %!in% c(cabinet$signatory,cabinet$joint_signatory)))
    
    # since there is MPs no included in the nodes df we must debug it!
-   index <- which(!(cabinet$joint_signatory %in% cabinet_deputies$name))
-   debug <- cabinet[index, ]
+   debug <- cabinet[which(!(cabinet$joint_signatory %in% cabinet_deputies$name)), ]
    debug <- unique(debug$joint_signatory)
    cabinet_deputies <- rbind(cabinet_deputies,
                              deputies[deputies$name %in% debug, 1:2])
@@ -309,20 +319,132 @@ prep_cabinet <- function(cabinet, cabinet_int, deputies) {
           cabinet_deputies,
           envir = parent.frame())
    }
+```
+
+The function consists of two primary purposes: first, 
+removing the duplicates observation on the contributions dataframe. 
+Furthermore, it deals with a significant issue: 
+Italian members of Parliament can change the party during their mandate.
+This, cause the presence of duplicated names (vertices in the SNA) 
+which must be removed.
+
+The issue has been addressed by filtering for the deputies whose office mandate 
+started *before* the cabinet end date and dropping the deputies whose office
+mandate started *after* the cabinet end date.
+Then, the deputies who appear more than once are saved in a temporary object, 
+coding the `party` variables as "SWITCHER/DECAYED".
+Lastly, the duplicates deputies are removed from the `cabinet_deputies`
+dataframe using an `anti_join()`, and then they are appended again to the 
+dataframe. This method permits to have solely unique observations in the 
+`cabinet_deputies` dataframe. Hence, the observations that appeared more than 
+once are now unique, with the party coded as "SWITCHER/DECAYED"
+
+To remove eventual orphan nodes, the function removes the observations from `cabinet_deputies` dataframe, whose `name` is not present in the contributions dataframe, `cabinet`.
+In order to doing so, we used a user-defined operator: `%!in%`^[defined as `Negate(`%in%`)`].
+The operator returns the values of $x$ that do not match in $y$. Applied to our case using a negate filter, it filters out all the deputies who are not present in the contributors' dataframe^[`filter(!(name %!in% c(cabinet$signatory,cabinet$joint_signatory))`].
+
+The function addresses another issue, also; some bills have latecomers associated as joint signatories since the lengthy legislative procedure. Possibly, these latecomers have not taken office under the cabinet in analysis and must be removed.
+The solution is implemented in a slightly convoluted manner which must be addressed in future releases.
+
+At its last, the function returns the resulting dataframes to the parent environment using the `assign()` verb The name of the returned objects is built upon the dataframe given as the `cabinet` argument to the function.
+
+Defined all the functions, we can now use them finishing the data pre-processing:
+
+```{r preparation functions}
+# Deputies function
+deputies <- prep_deputies(deputies)
+
+# Conte_i contributions and dates
+conte_i_date <- interval(ydm("2018-31-05"), ydm("2019-04-09"))
+
+prep_cabinet(cabinet = conte_i, cabinet_int = conte_i_date, deputies = deputies)
+
+# conte_ii contributions and dates
+conte_ii_date <- interval(ydm("2019-04-09"), ydm("2021-12-02"))
+
+prep_cabinet(cabinet = conte_ii, cabinet_int = conte_ii_date, deputies = deputies)
+```
+
+
+### Italia Viva
+
+A significant shortcoming was introduced with Conte's 2nd cabinet. Italia Viva party was founded (2019-09-18) fourteen days after the cabinet was sworn. For this reason, the function drop IV deputies as switchers. For this reason, we must add the deputies manually into the `cabinet_deputies` dataframe:
+
+```{r Italia Viva}
+iv <- deputies %>%
+  filter(party == "ITALIA VIVA") %>%
+  filter(int_start(date) == ymd("2019-09-19") &
+        int_end(date) > int_end(conte_ii_date)) %>%
+  select(!(date))
+
+conte_ii_deputies$party <- ifelse(conte_ii_deputies$name %in% iv$name,
+                                "ITALIA VIVA",
+                                conte_ii_deputies$party)
+```
+
+
+## Social Network Analysis
+
+For the SNA, we first create the edge and vertex dataframes using the defined functions:
+
+```{r SNA}
 
 ```
 
-The function consists of two primary purposes: first, removing the duplicates observation on the contributions dataframe. Furthermore, it deals with a significant issue: Italian members of Parliament can change the party during their mandate. This, cause the presence of duplicated names (vertices in the SNA) which must be removed.
-
-The issue has been addressed by filtering for the deputies whose office mandate started *before* the cabinet end date and dropping the deputies whose office mandate started *after* the cabinet end date.
-Then, the deputies who appear more than once are saved in a temporary object, coding the `party` variables as "SWITCHER/DECAYED".
-Lastly, the duplicates deputies are removed from the `cabinet_deputies` dataframe using an `anti_join()`, and then they are appended again to the dataframe. This method permits to have solely unique observations in the `cabinet_deputies` dataframe. Hence, the observations that appeared more than once are now unique, with the party coded as "SWITCHER/DECAYED"
-
-The function addresses another issue. Some bills have latecomers associated as joint signatories since the lengthy legislative procedure. Possibly, these latecomers have not taken office under the cabinet in analysis and must be removed.
-The method implemented is defined in a slightly convoluted manner which must be addressed in future releases.
-
-
 
 # Discussion
+
+
+```{r csp}
+cosponsor <- function(contributions, 
+                      deputies, signatory = "signatory", 
+                      joint_signatory = "joint_signatory",
+                      mp_name = "name" ) {
+ csp <- contributions %>% 
+    left_join(deputies,
+            by = c(signatory = mp_name )) %>% 
+    left_join(deputies,
+              by = c(joint_signatory = mp_name),
+              suffix = c("_main","_joint")) %>% 
+    group_by(num, party_main) %>% 
+    summarise(n= n(),
+              n_joint = sum(party_joint == party_main)) %>% 
+    mutate(csp = (n_joint/n)) %>% 
+    group_by(party_main) %>% 
+    summarise(csp_avg = mean(csp))
+ 
+ return(csp)
+}
+```
+
+```{r csp table, message=FALSE, warning=FALSE}
+csp_i <-  cosponsor(contributions = conte_i,
+                  deputies = conte_i_deputies)
+
+csp_2 <-  cosponsor(contributions = conte_ii,
+                    deputies = conte_ii_deputies) 
+
+csp <- csp_i %>% 
+  full_join(csp_2, 
+            by = c("party_main" = "party_main"),
+            suffix = c("_i", "_ii")) %>%
+  rename(conteI = csp_avg_i,
+         conteII = csp_avg_ii,
+         party = party_main) %>% 
+  mutate(across(2:3, round, 3))
+  
+```
+
+```{r table, echo=FALSE, message=FALSE, warning=FALSE}
+csp %>%
+  kbl(caption = "csp value") %>%
+  kable_classic_2("hover", full_width = F) %>% 
+  kable_styling(latex_options = "HOLD_position")
+```
+
+# Word count {-}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+wordcountaddin:::text_stats()
+```
 
 # References
