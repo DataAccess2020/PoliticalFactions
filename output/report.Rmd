@@ -479,15 +479,16 @@ plot(
 ## IOBD index
 
 The last part of this section will illustrate how the *Intra-Opposition party Bills Differentiation* (IOBD) index was computed, 
-following the definition provided by De Giorgi & Dias [-@de_giorgi_2018].
+following the definition provided by De Giorgi & Dias [-@de_giorgi_2018]:
 
 \begin{equation}
 IOBD = {CSP}+{IPS}
 \end{equation}
 
 Where: 
-- $CSP$: the percentage of co-sponsors of bills initiated by party x that belong to the same party;
-- $ISP$: of all the bills co-sponsored by MPs of party x, the percentage of those initiated by party x
+
+- $CSP$: the percentage of co-sponsors of bills initiated by party X that belong to the same party;
+- $ISP$: of all the bills co-sponsored by MPs of party X, the percentage of those initiated by party X.
 
 # Discussion
 

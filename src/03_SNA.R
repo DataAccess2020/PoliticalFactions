@@ -31,7 +31,7 @@ plot(
   
   ## Network main arguments
   conte_i_network, 
-  main = "Conte I",
+ # main = "Conte I",
   frame = F,
   layout = l,
   
@@ -85,7 +85,6 @@ plot(
   
   ## Network main arguments
   conte_ii_network, 
-  main = "Conte II",
   frame = F,
   layout = l,
   
