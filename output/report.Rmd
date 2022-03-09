@@ -406,7 +406,7 @@ conte_ii_edges <- conte_ii %>%
 Since we have already prepared the nodes' datasets, we needed to compute the networks with the `graph_from_data_frame()` function.
 We specify the directed relationship of the edges, which goes from the joint signatory to the related first signatory.
 
-```{r SNA nodes}
+```{r SNA nodes, eval=FALSE}
 # Computating igraph network from edges df:
 conte_i_network <- graph_from_data_frame(conte_i_edges, 
                                          directed = T, 
@@ -421,7 +421,7 @@ conte_ii_network <- graph_from_data_frame(conte_ii_edges,
 The last step is to give meaningful colour coding based on the node party affiliation.
 Unfortunately, the implemented method was wordy, and no other solution then nested `if-else` statements were found:
 
-```{r SNA color coding}
+```{r SNA color coding, eval=FALSE}
 # Coding the colours for Conte I network 
 V(conte_i_network)$color <- NA
 V(conte_i_network)$color <- 
@@ -448,10 +448,51 @@ V(conte_ii_network)$color <-
   ifelse(V(conte_ii_network)$party == "SWITCHER/DECAYED",NA, "pink"))))))))) 
 ```
 
+To visualize the resulting network, we plot it tuning the arguments to obtain the most precise result. To better position the nodes, we applied an algorithm that spread them using a physical simulation. For this analysis, we emplyed the Fruchterman-Reingold [-@fruchterman_graph_1991].
+
+```{r SNA Conte I, eval=FALSE}
+# Fruchterman-Reingold layout computation:
+l <- layout_with_fr(conte_i_network, niter = 2000)
+
+# Plot network
+plot(
+  
+  ## Network main arguments
+  conte_i_network, 
+  frame = F,
+  layout = l,
+  
+  ## Vertexes aes:
+  vertex.size = 7, 
+  vertex.label = NA,
+  vertex.label.cex = .7,
+  vertex.color = adjustcolor(V(conte_i_network)$color, alpha.f = 0.9),
+  
+  ## Edges aes: 
+  edge.arrow.size = .05,
+  edge.width = .3,
+  edge.curved =0.3)
+```
 
 
 # Discussion
 
+## Network analysis
+
+### Conte I
+
+```{r, echo=FALSE, out.width = "100%", fig.cap="Conte I contributions network graph", fig.align = 'center'}
+knitr::include_graphics(here::here('fig/conte_i.png'))
+```
+
+### Conte II 
+
+```{r, echo=FALSE, out.width = "100%", fig.cap="Conte I contributions network graph", fig.align = 'center'}
+knitr::include_graphics(here::here('fig/conte_ii.png'))
+```
+
+
+## IOBD index
 
 ```{r csp}
 cosponsor <- function(contributions, 
