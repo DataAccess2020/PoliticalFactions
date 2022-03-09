@@ -448,7 +448,9 @@ V(conte_ii_network)$color <-
   ifelse(V(conte_ii_network)$party == "SWITCHER/DECAYED",NA, "pink"))))))))) 
 ```
 
-To visualize the resulting network, we plot it tuning the arguments to obtain the most precise result. To better position the nodes, we applied an algorithm that spread them using a physical simulation. For this analysis, we emplyed the Fruchterman-Reingold [-@fruchterman_graph_1991].
+### Visualization
+
+To visualize the resulting network, we plot it tuning the arguments to obtain the most precise result. We applied an algorithm that spread the nodes using a physical simulation to better position them. For this analysis, we emplyed the Fruchterman-Reingold [-@fruchterman_graph_1991] algorithm.
 
 ```{r SNA Conte I, eval=FALSE}
 # Fruchterman-Reingold layout computation:
@@ -474,6 +476,18 @@ plot(
   edge.curved =0.3)
 ```
 
+## IOBD index
+
+The last part of this section will illustrate how the *Intra-Opposition party Bills Differentiation* (IOBD) index was computed, 
+following the definition provided by De Giorgi & Dias [-@de_giorgi_2018].
+
+\begin{equation}
+IOBD = {CSP}+{IPS}
+\end{equation}
+
+Where: 
+- $CSP$: the percentage of co-sponsors of bills initiated by party x that belong to the same party;
+- $ISP$: of all the bills co-sponsored by MPs of party x, the percentage of those initiated by party x
 
 # Discussion
 
