@@ -385,11 +385,69 @@ conte_ii_deputies$party <- ifelse(conte_ii_deputies$name %in% iv$name,
 
 ## Social Network Analysis
 
-For the SNA, we first create the edge and vertex dataframes using the defined functions:
+The Social Network Analysis was held relying on the `igraph` package. 
+In order to produce a network, we must provide a set of edges and a set of nodes.
+Since the data were pre-processed in the previous section, 
+we just needed to select the two variables that contain the signatory and the related joint signatories from the contributions datasets.
 
-```{r SNA}
+```{r SNA edges}
+# Edges preparations
+conte_i_edges <- conte_i %>%
+  select(!c(num, date)) %>%
+  relocate(joint_signatory)
+
+# Edges preparations
+conte_ii_edges <- conte_ii %>% 
+  select(!c(num, date)) %>% 
+  relocate(joint_signatory)
 
 ```
+
+Since we have already prepared the nodes' datasets, we needed to compute the networks with the `graph_from_data_frame()` function.
+We specify the directed relationship of the edges, which goes from the joint signatory to the related first signatory.
+
+```{r SNA nodes}
+# Computating igraph network from edges df:
+conte_i_network <- graph_from_data_frame(conte_i_edges, 
+                                         directed = T, 
+                                         vertices = conte_i_deputies)
+
+
+conte_ii_network <- graph_from_data_frame(conte_ii_edges, 
+                                          directed = T, 
+                                          vertices = conte_ii_deputies)
+```
+
+The last step is to give meaningful colour coding based on the node party affiliation.
+Unfortunately, the implemented method was wordy, and no other solution then nested `if-else` statements were found:
+
+```{r SNA color coding}
+# Coding the colours for Conte I network 
+V(conte_i_network)$color <- NA
+V(conte_i_network)$color <- 
+  ifelse(V(conte_i_network)$party == "FORZA ITALIA - BERLUSCONI PRESIDENTE","lightblue",
+  ifelse(V(conte_i_network)$party == "LEGA - SALVINI PREMIER", "forestgreen",
+  ifelse(V(conte_i_network)$party == "PARTITO DEMOCRATICO","red",
+  ifelse(V(conte_i_network)$party == "MOVIMENTO 5 STELLE", "yellow",
+  ifelse(V(conte_i_network)$party == "FRATELLI D'ITALIA","#003366",
+  ifelse(V(conte_i_network)$party == "LIBERI E UGUALI","orange",
+  ifelse(V(conte_i_network)$party == "MISTO","#DDDDDD",
+  ifelse(V(conte_i_network)$party == "SWITCHER/DECAYED", NA, "pink"))))))))
+
+# Coding the colours for Conte I network 
+V(conte_ii_network)$color <- NA
+V(conte_ii_network)$color <- 
+  ifelse(V(conte_ii_network)$party == "FRATELLI D'ITALIA","#003366",
+  ifelse(V(conte_ii_network)$party == "MOVIMENTO 5 STELLE","yellow",
+  ifelse(V(conte_ii_network)$party == "LEGA - SALVINI PREMIER","forestgreen",
+  ifelse(V(conte_ii_network)$party == "FORZA ITALIA - BERLUSCONI PRESIDENTE","lightblue",
+  ifelse(V(conte_ii_network)$party == "PARTITO DEMOCRATICO","red",
+  ifelse(V(conte_ii_network)$party == "LIBERI E UGUALI","orange",
+  ifelse(V(conte_ii_network)$party == "MISTO","#DDDDDD",
+  ifelse(V(conte_ii_network)$party == "ITALIA VIVA","#C83282",
+  ifelse(V(conte_ii_network)$party == "SWITCHER/DECAYED",NA, "pink"))))))))) 
+```
+
 
 
 # Discussion
@@ -424,6 +482,10 @@ csp_i <-  cosponsor(contributions = conte_i,
 csp_2 <-  cosponsor(contributions = conte_ii,
                     deputies = conte_ii_deputies) 
 
+  
+```
+
+```{r table, echo=FALSE, message=FALSE, warning=FALSE}
 csp <- csp_i %>% 
   full_join(csp_2, 
             by = c("party_main" = "party_main"),
@@ -432,10 +494,7 @@ csp <- csp_i %>%
          conteII = csp_avg_ii,
          party = party_main) %>% 
   mutate(across(2:3, round, 3))
-  
-```
 
-```{r table, echo=FALSE, message=FALSE, warning=FALSE}
 csp %>%
   kbl(caption = "csp value") %>%
   kable_classic_2("hover", full_width = F) %>% 
