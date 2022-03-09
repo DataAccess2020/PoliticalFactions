@@ -1,4 +1,29 @@
 
+# ISP ---------------------------------------------------------------------
+
+
+intraparty <- function(contributions, 
+                       deputies, signatory = "signatory", 
+                       joint_signatory = "joint_signatory",
+                       mp_name = "name" ) {
+   contributions %>% 
+      left_join(deputies,
+                by = c(signatory = mp_name )) %>% 
+      left_join(deputies,
+                by = c(joint_signatory = mp_name),
+                suffix = c("_main","_joint")) %>% 
+      
+      # group by party of the joint signatory
+      group_by(party_joint) %>% 
+      summarise(n= n(),
+                n_joint = sum(party_joint == party_main)) %>% 
+      
+      # computing the ISP index  
+      mutate(isp = (n_joint/n)) %>% 
+      summarise(party = party_joint,
+                isp = isp)
+}
+
 # Co-sponsors of Same Party MEAN ------------------------------------------
 
 
@@ -6,20 +31,23 @@ cosponsor <- function(contributions,
                       deputies, signatory = "signatory", 
                       joint_signatory = "joint_signatory",
                       mp_name = "name" ) {
- csp <- contributions %>% 
-    left_join(deputies,
-            by = c(signatory = mp_name )) %>% 
-    left_join(deputies,
-              by = c(joint_signatory = mp_name),
-              suffix = c("_main","_joint")) %>% 
-    group_by(num, party_main) %>% 
-    summarise(n= n(),
-              n_joint = sum(party_joint == party_main)) %>% 
-    mutate(csp = (n_joint/n)) %>% 
-    group_by(party_main) %>% 
-    summarise(csp_avg = mean(csp))
- 
- return(csp)
+   contributions %>% 
+      
+      # double join to get the signatory and joint signatory party 
+      left_join(deputies,
+                by = c(signatory = mp_name )) %>% 
+      left_join(deputies,
+                by = c(joint_signatory = mp_name),
+                suffix = c("_main","_joint")) %>% 
+      
+      # group by the bill and the party of the signatory and computing the csp
+      group_by(party_main) %>% 
+      summarise(n= n(),
+                n_joint = sum(party_joint == party_main)) %>% 
+      mutate(csp = (n_joint/n)) %>% 
+      summarise(party = party_main,
+                csp = csp)
+   
 }
 
 
