@@ -490,6 +490,89 @@ Where:
 - $CSP$: the percentage of co-sponsors of bills initiated by party X that belong to the same party;
 - $ISP$: of all the bills co-sponsored by MPs of party X, the percentage of those initiated by party X.
 
+### CSP
+
+To calculate the Cosponsorship index, we defined a simple function. First, we double joint the deputies df into contributions df to extract the deputies party. Then, grouping by the party of the first signatory, we divided the numbers of joint signatories of the same party by the total of joint signatories that had contributed to the party's bills:
+
+```{r CSP fun}
+cosponsor <- function(contributions, 
+                      deputies, signatory = "signatory", 
+                      joint_signatory = "joint_signatory",
+                      mp_name = "name" ) {
+   contributions %>% 
+      
+      # double join to get the signatory and joint signatory party 
+      left_join(deputies,
+                by = c(signatory = mp_name )) %>% 
+      left_join(deputies,
+                by = c(joint_signatory = mp_name),
+                suffix = c("_main","_joint")) %>% 
+      
+      # group by the bill and the party of the signatory and computing the csp
+      group_by(party_main) %>% 
+      summarise(n= n(),
+                n_joint = sum(party_joint == party_main)) %>% 
+      mutate(csp = (n_joint/n)) %>% 
+      summarise(party = party_main,
+                csp = csp)
+}
+```
+
+### IPS
+
+We used the same structure as the previous function to calculate the intraparty index. This time, we grouped by the party of the joint signatories. So, we calculated all bills co-sponsored by MPs of a party, the percentage of those initiated by the same party:
+
+```{r IPS fun}
+intraparty <- function(contributions, 
+                       deputies, signatory = "signatory", 
+                       joint_signatory = "joint_signatory",
+                       mp_name = "name" ) {
+   contributions %>% 
+      left_join(deputies,
+                by = c(signatory = mp_name )) %>% 
+      left_join(deputies,
+                by = c(joint_signatory = mp_name),
+                suffix = c("_main","_joint")) %>% 
+      
+      # group by party of the joint signatory
+      group_by(party_joint) %>% 
+      summarise(n= n(),
+                n_joint = sum(party_joint == party_main)) %>% 
+      
+      # computing the ISP index  
+      mutate(ips = (n_joint/n)) %>% 
+      summarise(party = party_joint,
+                ips = ips)
+}
+```
+
+### IOBD index
+
+At last, we defined the last function, which calculates the sum of the two indexes defined before, relying on the above-explained functions:
+
+```{r IOBD}
+iobd_index <- function(contributions, deputies, 
+                 signatory = "signatory", joint_signatory = "joint_signatory",
+                 mp_name = "name" ) {
+   
+   # call cosponsors function
+   cosponsor(contributions, deputies, 
+             signatory, joint_signatory,
+             mp_name) %>%
+      
+   #join the result with intraparty function by party name
+      left_join(., intraparty(contributions, deputies, 
+                              signatory, joint_signatory,
+                              mp_name),
+                by = c("party" = "party")) %>% 
+      
+   # summarize the results by the party name and IOBD var,
+   # which is the sum of CSP and IPS
+      summarise(party,
+                IOBD = csp+ips)
+}
+```
+
 # Discussion
 
 ## Network analysis
@@ -509,50 +592,26 @@ knitr::include_graphics(here::here('fig/conte_ii.png'))
 
 ## IOBD index
 
-```{r csp}
-cosponsor <- function(contributions, 
-                      deputies, signatory = "signatory", 
-                      joint_signatory = "joint_signatory",
-                      mp_name = "name" ) {
- csp <- contributions %>% 
-    left_join(deputies,
-            by = c(signatory = mp_name )) %>% 
-    left_join(deputies,
-              by = c(joint_signatory = mp_name),
-              suffix = c("_main","_joint")) %>% 
-    group_by(num, party_main) %>% 
-    summarise(n= n(),
-              n_joint = sum(party_joint == party_main)) %>% 
-    mutate(csp = (n_joint/n)) %>% 
-    group_by(party_main) %>% 
-    summarise(csp_avg = mean(csp))
- 
- return(csp)
-}
-```
-
 ```{r csp table, message=FALSE, warning=FALSE}
-csp_i <-  cosponsor(contributions = conte_i,
+conte_i_iobd <-  iobd_index(contributions = conte_i,
                   deputies = conte_i_deputies)
 
-csp_2 <-  cosponsor(contributions = conte_ii,
+conte_ii_iobd <-  iobd_index(contributions = conte_ii,
                     deputies = conte_ii_deputies) 
 
   
 ```
 
 ```{r table, echo=FALSE, message=FALSE, warning=FALSE}
-csp <- csp_i %>% 
-  full_join(csp_2, 
-            by = c("party_main" = "party_main"),
+iobd_full  %>% 
+  full_join(x = conte_i_iobd,
+            y = conte_ii_iobd, 
+            by = c("party" = "party"),
             suffix = c("_i", "_ii")) %>%
-  rename(conteI = csp_avg_i,
-         conteII = csp_avg_ii,
-         party = party_main) %>% 
-  mutate(across(2:3, round, 3))
-
-csp %>%
-  kbl(caption = "csp value") %>%
+  rename(conteI = IOBD_i,
+         conteII = IOBD_ii) %>% 
+  mutate(across(2:3, round, 3)) %>% 
+  kbl(caption = "IOBD index") %>%
   kable_classic_2("hover", full_width = F) %>% 
   kable_styling(latex_options = "HOLD_position")
 ```
