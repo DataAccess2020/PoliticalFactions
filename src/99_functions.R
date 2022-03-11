@@ -18,7 +18,7 @@ intraparty <- function(contributions,
       summarise(n= n(),
                 n_joint = sum(party_joint == party_main)) %>% 
       
-      # computing the IPS index  
+      # computing the ISP index  
       mutate(ips = (n_joint/n)) %>% 
       summarise(party = party_joint,
                 ips = ips)
