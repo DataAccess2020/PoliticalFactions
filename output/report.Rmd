@@ -579,27 +579,36 @@ iobd_index <- function(contributions, deputies,
 
 ### Conte I
 
+The visual analysis of the produced SNA graph permits some considerations. 
+As can be observed in **Figure 1**, during the first Conte's cabinet the majority of the parties were sheltered to their positions. Even if the two government parties, Lega Nord and Movimento 5 Stelle,  have interacted extensively between them, they still constitute two distinct communities. 
+Only the Partito Democratico results partially blended with Liberi e Uguali community.
+It must be noted that this visualization did not employ any modularity computation, and the nodes (which represent deputies) has been coloured by the party affiliation.
+
 ```{r, echo=FALSE, out.width = "100%", fig.cap="Conte I contributions network graph", fig.align = 'center'}
 knitr::include_graphics(here::here('fig/conte_i.png'))
 ```
 
 ### Conte II 
 
-```{r, echo=FALSE, out.width = "100%", fig.cap="Conte I contributions network graph", fig.align = 'center'}
-knitr::include_graphics(here::here('fig/conte_ii.png'))
+```{r, echo=FALSE, out.width = "100%", fig.cap="Conte I contributions network graph", fig.align = "center"}
+knitr::include_graphics(here::here("fig/conte_ii.png"))
 ```
 
+**Figure 2** represent the network formed of co-authorship formed under the second Conte cabinet. The ruling parties were Movimento 5 Stelle, Partito Democratico, Liberi e Uguali, and Italia Viva. Again, we can obverse the formation of significant clusters within the Chamber of the Deputies. M5S once again had a strong relationship with other ruling parties; however, it formed a self-standing community from them.
+Notably, other ruling parties (PD, LeU, IV) were firmly held together, to the point that they constituted a community by themselves.
+As for the first network graph, we did not employ any modularity computation; therefore, the colour and the size of the nodes are provided manually and do not correspond to statistics computation.
+
+\newpage
 
 ## IOBD index
 
-```{r csp table, message=FALSE, warning=FALSE}
+
+```{r csp table, echo=F, message=FALSE, warning=FALSE}
 conte_i_iobd <-  iobd_index(contributions = conte_i,
                   deputies = conte_i_deputies)
 
 conte_ii_iobd <-  iobd_index(contributions = conte_ii,
                     deputies = conte_ii_deputies) 
-
-  
 ```
 
 ```{r table, echo=FALSE, message=FALSE, warning=FALSE}
