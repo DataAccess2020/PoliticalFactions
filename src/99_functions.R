@@ -19,9 +19,9 @@ intraparty <- function(contributions,
                 n_joint = sum(party_joint == party_main)) %>% 
       
       # computing the ISP index  
-      mutate(isp = (n_joint/n)) %>% 
+      mutate(ips = (n_joint/n)) %>% 
       summarise(party = party_joint,
-                isp = isp)
+                ips = ips)
 }
 
 # Co-sponsors of Same Party MEAN ------------------------------------------
@@ -50,6 +50,15 @@ cosponsor <- function(contributions,
    
 }
 
+
+# IOBD index --------------------------------------------------------------
+
+iobd_index <- function(contributions, deputies, 
+                 signatory = "signatory", joint_signatory = "joint_signatory",
+                 mp_name = "name" ) {
+   iobd %>% 
+      summarise()
+}
 
 # Contributions preparation -----------------------------------------------
 
