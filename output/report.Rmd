@@ -602,6 +602,9 @@ As for the first network graph, we did not employ any modularity computation; th
 
 ## IOBD index
 
+For the last part of the project, we calculated the IODB index for the two periods under analysis using the defined functions. The results, shown in **Table 1**, provide evidence in favour of our previous findings.  
+Under Conte I, all the parties demonstrated strong ties within them.
+Under Conte II, the parties had strong ties within them; however, the ties between the ruling parties were stronger than Conte I cabinet. 
 
 ```{r csp table, echo=F, message=FALSE, warning=FALSE}
 conte_i_iobd <-  iobd_index(contributions = conte_i,
@@ -624,6 +627,16 @@ iobd_full  %>%
   kable_classic_2("hover", full_width = F) %>% 
   kable_styling(latex_options = "HOLD_position")
 ```
+
+# Conclusion
+
+In conclusion, in this short paper, we failed to provide enough evidence favouring our hypothesis.
+Nevertheless, we can assert that the parties were polarized and cohesive in the bill proposal and that no prominent political factions were noticeable.
+
+More in-depth analyses are required to provide a more explicit demonstration. 
+Further studies must break up the bill proposal into the different topics exposed to understand if the variation of the topic provokes a variation in the IODB index.
+
+Moreover, a more reliable and flexible database type is needed. We allow ourselves to suggest the usage of a network database powered by a management system such as [Neo4j](https://neo4j.com).
 
 # Word count {-}
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
