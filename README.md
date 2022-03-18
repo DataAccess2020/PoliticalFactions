@@ -13,7 +13,7 @@ I partiti di governo, presso la Camera dei Deputati, erano coesi nell'attività 
 Pubblicazioni sul:
 
 - De Giorgi, E., & Dias, A. (2018). Standing apart together? Common traits of (new) challenger parties in the Italian parliament. Italian Political Science, 13(2).
-- *In Aggiunta ulteriori pubblicazioni*
+- Pederazzani, A. (2018). Introduction to the Special Issue: ‘Governo del cambiamento’? Italian politics under the yellow-green government. Italian Political Science, 13(2)
 
 ### Ipotesi e meccanismo
 
